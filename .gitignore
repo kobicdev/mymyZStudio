@@ -1,0 +1,53 @@
+# ZImageStudio .gitignore
+
+# ── Node.js ──────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Build Outputs ─────────────────────────
+dist/
+dist-electron/
+release/
+
+# ── Electron ──────────────────────────────
+out/
+
+# ── Logs ──────────────────────────────────
+logs/
+*.log
+
+# ── SQLite DB (사용자 데이터는 앱 데이터 경로에 저장) ──
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Models & Binaries (대용량, 별도 관리) ────
+models/
+resources/bin/
+resources/sd/
+outputs/
+*.exe
+
+# ── OS ───────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ───────────────────────────────────
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+
+# ── Environment ───────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Test Coverage ─────────────────────────
+coverage/
+
+# ── TypeScript ────────────────────────────
+*.tsbuildinfo

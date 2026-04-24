@@ -1,0 +1,119 @@
+/* Google Fonts 외부 로드 제거 - PRD "완전 로컈" 원칙 (§1.3)
+   Electron 내장 Chromium의 system-ui 폰트 사용 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --scrollbar-width: 6px;
+  --scrollbar-color: #3f3f46;
+  --scrollbar-hover: #52525b;
+}
+
+/* ── Base Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+  /* Electron에서 텍스트 선택 비활성 (앱처럼 보이도록) */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 텍스트 입력 영역은 선택 허용 */
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+body {
+  height: 100%;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  background-color: #09090b; /* zinc-950 */
+  color: #f4f4f5;            /* zinc-100 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100%;
+}
+
+/* ── 스크롤바 스타일 ── */
+::-webkit-scrollbar {
+  width: var(--scrollbar-width);
+  height: var(--scrollbar-width);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-color);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover);
+}
+
+/* ── Electron 드래그 영역 ── */
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* ── 유틸리티 레이어 ── */
+@layer utilities {
+  .glass {
+    background: rgba(24, 24, 27, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(63, 63, 70, 0.5);
+  }
+
+  .text-gradient-brand {
+    background: linear-gradient(135deg, #a78bfa, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .ring-brand {
+    --tw-ring-color: #5a5aff;
+  }
+}
+
+/* ── 애니메이션 ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(4px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-fade-in    { animation: fadeIn  0.2s ease-in-out; }
+.animate-slide-up   { animation: slideUp 0.25s ease-out; }
+.animate-shimmer {
+  background: linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%);
+  background-size: 200% auto;
+  animation: shimmer 1.5s linear infinite;
+}

@@ -1,0 +1,39 @@
+{
+  "models": [
+    {
+      "id": "z-image-turbo-q4",
+      "name": "Z-Image-Turbo-Q4_K_M",
+      "version": "1.0.0",
+      "type": "diffusion",
+      "description": "Z-Image Turbo GGUF Q4_K_M (권장) — VRAM 4~6GB",
+      "url": "https://huggingface.co/jayn7/Z-Image-Turbo-GGUF/resolve/main/z_image_turbo-Q4_K_M.gguf",
+      "sha256": "TODO: 공식 SHA-256 수집 후 채워 넣기",
+      "size_bytes": 4980000000,
+      "tags": ["recommended", "q4", "low-vram"]
+    },
+    {
+      "id": "qwen3-4b-q4",
+      "name": "Qwen3-4B-Instruct-GGUF",
+      "version": "1.0.0",
+      "type": "llm",
+      "description": "Z-Image 전용 텍스트 인코더 (Qwen3-4B Q4_K_M)",
+      "url": "https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/qwen3_4b_q4_k_m.gguf",
+      "sha256": "TODO",
+      "size_bytes": 2800000000,
+      "tags": ["required", "text-encoder"]
+    },
+    {
+      "id": "flux-vae",
+      "name": "FLUX-VAE (ae.sft)",
+      "version": "1.0.0",
+      "type": "vae",
+      "description": "Z-Image / Flux 호환 VAE (ae.sft)",
+      "url": "https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.sft",
+      "sha256": "TODO",
+      "size_bytes": 335000000,
+      "tags": ["required", "vae"]
+    }
+  ],
+  "_comment": "Z-Image Turbo는 위 3개 파일이 모두 필요합니다. v0.5 다운로더 구현 시 이 종속성을 체크해야 합니다."
+}
+

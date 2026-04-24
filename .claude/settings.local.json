@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(echo \"renderer PID: $!\")",
+      "Bash(tsc -p tsconfig.electron.json)",
+      "Bash(./node_modules/.bin/tsc -p tsconfig.electron.json)",
+      "Bash(NODE_ENV=development ./node_modules/.bin/electron .)",
+      "Bash(echo \"electron PID: $!\")",
+      "Bash(\"./sd-cli.exe\" --help)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(\"./sd-cli.exe\" -M img_gen -p \"test\" -W 64 -H 64 --steps 1 --cfg-scale 1 -s 42 --sampling-method euler -o \"./test_out.png\")",
+      "Bash(\"./sd-cli.exe\" -M img_gen)",
+      "Bash(\"./sd-cli.exe\" -M img_gen -m \"E:/AI_Works/mymyZStudio/models/stable-diffusion-v2-1-turbo-Q8_0.gguf\" -p \"test\" -W 64 -H 64 --steps 1 --cfg-scale 1 -s 42 --sampling-method euler -o \"./test_out.png\")",
+      "Bash(\"./sd-cli.exe\" -M img_gen -p \"A beautiful landscape, cinematic lighting, 8k\" -n \"blurry, low quality, deformed, ugly, bad anatomy\" -W 512 -H 512 --steps 8 --cfg-scale 1 -s 1349341373 --sampling-method euler -m \"E:/AI_Works/mymyZStudio/models/stable-diffusion-v2-1-turbo-Q8_0.gguf\" -o \"D:/OneDrive/사진/ZImageStudio/outputs/test_app.png\")",
+      "Read(//c/Users/SYSOP/AppData/Roaming/zimagestudio/ZImageStudio/**)",
+      "Bash(pkill -f \"electron.exe\")",
+      "Bash(pkill -f \"vite\")",
+      "Bash(grep -v \"^$\")"
+    ]
+  }
+}
