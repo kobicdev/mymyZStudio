@@ -1,10 +1,7 @@
 @echo off
-:: 이 배치파일은 반드시 cmd.exe 환경에서 실행해야 합니다.
-if not "%COMSPEC%"=="%SystemRoot%\system32\cmd.exe" (
-    cmd /c "%~f0"
-    exit /b
-)
+setlocal enabledelayedexpansion
 
+:: ZImageStudio Production Startup Script
 chcp 65001 > nul
 title ZImageStudio - Production
 
@@ -17,9 +14,9 @@ echo.
 :: --- Step 1: Kill previous processes ---
 echo  [1/4] Killing previous processes...
 
-taskkill /F /IM electron.exe /T  > nul 2>&1
-taskkill /F /IM sd.exe /T        > nul 2>&1
-node scripts\kill-port.js 5173
+taskkill /F /IM electron.exe /T > nul 2>&1
+taskkill /F /IM sd.exe /T > nul 2>&1
+node scripts\kill-port.js 5173 > nul 2>&1
 
 timeout /t 1 /nobreak > nul
 echo  [1/4] Done.
@@ -29,7 +26,7 @@ echo  [2/4] Checking dependencies...
 
 if not exist "node_modules\" (
     echo  [!] node_modules not found - running npm install...
-    npm install --ignore-scripts
+    call npm install --ignore-scripts
     if errorlevel 1 (
         echo  [ERROR] npm install failed!
         pause
@@ -37,13 +34,15 @@ if not exist "node_modules\" (
     )
 )
 
-if not exist "node_modules\electron\dist\electron.exe" (
-    echo  [!] Electron binary missing - downloading...
-    node node_modules/electron/install.js
+:: better-sqlite3 native rebuild check (Sync with dev.bat)
+set "SQLITE_BINDING=node_modules\better-sqlite3\build\Release\better_sqlite3.node"
+if not exist "%SQLITE_BINDING%" (
+    echo  [!] better-sqlite3 needs rebuild for Electron...
+    call npx electron-rebuild -f -w better-sqlite3
     if errorlevel 1 (
-        echo  [ERROR] Electron install failed!
-        pause
-        exit /b 1
+        echo  [WARN] electron-rebuild failed - DB features may not work
+    ) else (
+        echo  [OK] better-sqlite3 rebuilt successfully
     )
 )
 
@@ -69,6 +68,9 @@ echo  ^|  This window stays open while running.   ^|
 echo  +------------------------------------------+
 echo.
 
+:: Set NODE_ENV to production explicitly
+set NODE_ENV=production
+:: set DEBUG_ELECTRON=true
 npx electron .
 
 if errorlevel 1 (
@@ -76,3 +78,5 @@ if errorlevel 1 (
     echo  [ERROR] App exited with an error.
     pause
 )
+
+endlocal

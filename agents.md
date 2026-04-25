@@ -70,7 +70,7 @@ electron/
       ├── processHandler.ts      # 좀비 방지 3단계 종료 (§4.1)
       ├── gpuProbe.ts            # nvidia-smi GPU 프리체크 (§4.2)
       ├── downloader.ts          # 이어받기+SHA-256 다운로더 (§4.3)
-      ├── ollama.ts              # Prompt Enhancer 연동 (§3.8)
+      ├── llm.ts                 # Prompt Enhancer 연동 (LM Studio 등)
       ├── models.ts              # 모델 파일 스캔·관리
       └── db.ts                  # SQLite better-sqlite3 래퍼
 ```
@@ -318,9 +318,9 @@ electron/
 'model:download-progress' → push { received: number, total: number, percent: number }
 'model:verify'            → request { modelId: string }, response { valid: boolean }
 
-// Ollama 관련
-'ollama:check'            → request void, response { available: boolean, models: string[] }
-'ollama:enhance'          → request { prompt: string, model: string }, response { enhanced: string }
+// LLM 관련
+'llm:check'            → request void, response { available: boolean, models: string[] }
+'llm:enhance'          → request { prompt: string, model: string }, response { enhanced: string }
 ```
 
 ### 데이터 타입 공유 인터페이스
@@ -404,6 +404,10 @@ feature/      — 기능 브랜치 (예: feature/BE-02-process-handler)
 fix/          — 버그 수정
 ```
 
+### 히스토리 관리
+- 모든 에이전트는 주요 기능 변경, 버그 수정, 아키텍처 결정을 수행한 후 이 파일의 **변경 이력 (Change History)** 섹션에 기록해야 함.
+- 기록 형식: `[날짜] [에이전트] [태스크ID] 내용 요약`
+
 ### 커밋 컨벤션
 ```
 feat(BE): processHandler 3단계 종료 전략 구현 [BE-02]
@@ -430,6 +434,23 @@ agents.md: ✅ 생성 완료
 개발 환경: 🔧 구성 중
 v0.1 PoC: ⏳ 대기 중
 ```
+
+---
+
+---
+
+## 변경 이력 (Change History)
+
+| 날짜 | 에이전트 | 내용 | 태스크 |
+|------|----------|------|--------|
+| 2026-04-25 | BACKEND | Windows 드라이브 문자(D:)가 포함된 zimg 프로토콜 경로 파싱 오류 수정 | — |
+| 2026-04-25 | BACKEND | start.bat 실행 시 production 모드에서 index.html 경로 오류 수정 (../dist -> ../../dist) | — |
+| 2026-04-24 | FRONTEND | img2img 기능 구현 (소스 이미지 선택 UI + Denoise 슬라이더) | FE-07 |
+| 2026-04-24 | BACKEND | img2img IPC 핸들러 및 CLI 인자 구성 (--strength 지원) | BE-01 |
+| 2026-04-24 | BACKEND | Ollama 서비스를 범용 LLM 서비스(LM Studio 호환)로 전환 | BE-09 |
+| 2026-04-24 | FRONTEND | 설정 UI에서 LM Studio 연동 기능 및 토글 구현 | FE-11 |
+| 2026-04-24 | FRONTEND | 프롬프트 입력창 리셋 버튼 추가 및 파라미터 요약 가이드 추가 | FE-01 |
+| 2026-04-24 | ORCHESTRATOR | GitHub 저장소 연동 및 히스토리 기록 규칙 명시 | — |
 
 ---
 

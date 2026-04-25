@@ -1,11 +1,11 @@
-import { app, BrowserWindow, session, protocol } from 'electron'
+import { app, BrowserWindow, session, protocol, dialog, ipcMain } from 'electron'
 import path from 'path'
 import fs from 'fs'
 
 // 로컬 이미지 파일을 렌더러에서 로드할 수 있도록 커스텀 프로토콜 등록
 // (dev 모드에서 http://localhost는 file:// 로드가 차단됨)
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'zimg', privileges: { secure: true, standard: false, supportFetchAPI: true, corsEnabled: true } },
+  { scheme: 'zimg', privileges: { secure: true, standard: true, supportFetchAPI: true, corsEnabled: true, stream: true } },
 ])
 
 // ─── IPC Handlers ─────────────────────────────────────────────
@@ -138,7 +138,7 @@ function createWindow(): void {
           "font-src 'self' data:",
           "img-src 'self' data: file: blob: zimg: https://via.placeholder.com",
           "media-src 'self' file: blob:",
-          "connect-src 'self' http://localhost:11434",
+          "connect-src 'self' http://localhost:*",
           "worker-src 'self' blob:",
         ].join('; ')
 
@@ -154,7 +154,19 @@ function createWindow(): void {
     win.loadURL(VITE_DEV_SERVER_URL)
     win.webContents.openDevTools({ mode: 'detach' })
   } else {
-    win.loadFile(path.join(__dirname, '../dist/index.html'))
+    const indexPath = path.join(__dirname, '../../dist/index.html')
+    process.stderr.write(`[STARTUP] Loading index.html from: ${indexPath}\n`)
+    
+    if (fs.existsSync(indexPath)) {
+      win.loadFile(indexPath)
+      // 디버깅을 위해 환경변수가 설정된 경우 prod에서도 DevTools 오픈
+      if (process.env.DEBUG_ELECTRON === 'true') {
+        win.webContents.openDevTools({ mode: 'detach' })
+      }
+    } else {
+      process.stderr.write(`[STARTUP] ERROR: index.html not found at ${indexPath}\n`)
+      dialog.showErrorBox('Startup Error', `Could not find index.html at:\n${indexPath}`)
+    }
   }
 
   process.stderr.write('[STARTUP] BrowserWindow created\n')
@@ -166,34 +178,53 @@ process.stderr.write('[STARTUP] main.ts loaded\n')
 app.whenReady().then(() => {
   process.stderr.write(`[STARTUP] app.whenReady — v${app.getVersion()} (${process.platform})\n`)
 
+  ipcMain.handle('app:choose-image', async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'] }]
+    })
+    return result.filePaths[0]
+  })
+
   // zimg: 프로토콜 핸들러 — 로컬 파일을 렌더러에 안전하게 제공
   protocol.handle('zimg', (request) => {
-    process.stderr.write(`[zimg] Raw Request: ${request.url}\n`)
-    
-    // zimg://D:/... 또는 zimg:D:/... 형태에서 접두어 제거
-    // [\/]* 를 사용하여 슬래시가 0개 이상인 경우 모두 대응
-    let filePath = request.url.replace(/^zimg:[\/]*/i, '')
-    filePath = decodeURIComponent(filePath).split('?')[0]
-
-    // Windows에서 D:/... 형태가 되도록 정규화
-    filePath = path.normalize(filePath)
-
     try {
-      if (!fs.existsSync(filePath)) {
-        process.stderr.write(`[zimg] Not Found (Resolved): ${filePath}\n`)
+      const url = new URL(request.url)
+      let filePath = ''
+      
+      if (process.platform === 'win32') {
+        // Case 1: host is drive letter (e.g., zimg://D/path -> host: 'D', pathname: '/path')
+        if (url.host && url.host.length === 1 && /^[a-zA-Z]$/.test(url.host)) {
+          filePath = url.host + ':' + decodeURIComponent(url.pathname)
+        } 
+        // Case 2: host is empty, pathname starts with drive letter (e.g., zimg:///C:/path)
+        else if (!url.host && decodeURIComponent(url.pathname).match(/^\/[a-zA-Z]:/)) {
+          filePath = decodeURIComponent(url.pathname).substring(1)
+        }
+        // Case 3: fallback
+        else {
+          filePath = decodeURIComponent(url.host + url.pathname)
+        }
+      } else {
+        filePath = decodeURIComponent(url.host + url.pathname)
+      }
+
+      const normalizedPath = path.normalize(filePath)
+      
+      if (!fs.existsSync(normalizedPath)) {
         return new Response('Not Found', { status: 404 })
       }
 
-      const data = fs.readFileSync(filePath)
-      const ext = path.extname(filePath).toLowerCase()
-      const mime = ext === '.png' ? 'image/png' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png'
-      
-      process.stderr.write(`[zimg] Success: ${filePath} (${data.length} bytes)\n`)
-      return new Response(data, { 
-        headers: { 
-          'Content-Type': mime,
-          'Access-Control-Allow-Origin': '*' 
-        } 
+      // stream으로 반환 (큰 파일 대응)
+      const stream = fs.createReadStream(normalizedPath)
+      const ext = path.extname(normalizedPath).toLowerCase()
+      const mime = ext === '.png' ? 'image/png' : 
+                   (ext === '.jpg' || ext === '.jpeg') ? 'image/jpeg' : 
+                   ext === '.webp' ? 'image/webp' : 'application/octet-stream'
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return new Response(stream as any, {
+        headers: { 'Content-Type': mime }
       })
     } catch (err) {
       process.stderr.write(`[zimg] Error: ${err}\n`)

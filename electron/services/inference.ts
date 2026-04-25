@@ -115,7 +115,11 @@ export class InferenceService {
       const handleChunk = (chunk: string) => {
         const lines = chunk.split('\n')
         for (const line of lines) {
-          log.debug(`[sd.cpp] ${line.trim()}`)
+          const trimmed = line.trim()
+          if (!trimmed) continue
+          log.debug(`[sd.cpp] ${trimmed}`)
+          // 렌더러 콘솔 패널로 전송
+          mainWindow.webContents.send(IPC_CHANNELS.INFERENCE_LOG, { line: trimmed })
           this.parseProgressLine(line, mainWindow, totalSteps, (step, total) => {
             totalSteps = total
             void step

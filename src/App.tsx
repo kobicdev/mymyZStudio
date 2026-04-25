@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
+import { MemoryRouter, Routes, Route, NavLink } from 'react-router-dom'
 import GeneratePage from './pages/Generate'
 import GalleryPage from './pages/Gallery'
 import SettingsPage from './pages/Settings'
@@ -13,7 +13,7 @@ import SettingsPage from './pages/Settings'
  */
 export default function App() {
   return (
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <MemoryRouter initialEntries={['/']} initialIndex={0}>
       <div className="flex h-screen bg-zinc-950 text-zinc-100 font-sans overflow-hidden">
         {/* ── Sidebar Navigation ── */}
         <nav className="w-14 flex flex-col items-center py-4 gap-2 bg-zinc-900 border-r border-zinc-800">
@@ -86,6 +86,6 @@ export default function App() {
           </Routes>
         </main>
       </div>
-    </BrowserRouter>
+    </MemoryRouter>
   )
 }

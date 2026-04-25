@@ -75,6 +75,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => ipcRenderer.removeListener(channel, subscription)
   },
 
+  onLog: (callback: (data: { line: string }) => void) => {
+    const subscription = (_event: unknown, data: unknown) => callback(data as { line: string })
+    ipcRenderer.on('inference:log', subscription)
+    return () => ipcRenderer.removeListener('inference:log', subscription)
+  },
+
   // ─── GPU ───────────────────────────────────────
   probeGpu: () =>
     ipcRenderer.invoke(CHANNELS.GPU_PROBE),
@@ -152,6 +158,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke(CHANNELS.SETTINGS_OPEN_OUTPUT_DIR),
 
   // ─── App ───────────────────────────────────────
+  chooseImage: () =>
+    ipcRenderer.invoke('app:choose-image'),
+
   copyBugReport: () =>
     ipcRenderer.invoke(CHANNELS.APP_BUG_REPORT),
 })

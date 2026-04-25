@@ -45,6 +45,7 @@ declare global {
       openOutputDir: () => Promise<void>
 
       // App
+      chooseImage: () => Promise<string | null>
       copyBugReport: () => Promise<string>
     }
   }

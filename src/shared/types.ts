@@ -193,6 +193,7 @@ export const IPC_CHANNELS = {
   INFERENCE_PROGRESS: 'inference:progress',
   INFERENCE_COMPLETE: 'inference:complete',
   INFERENCE_ERROR: 'inference:error',
+  INFERENCE_LOG: 'inference:log',
 
   // GPU
   GPU_PROBE: 'gpu:probe',

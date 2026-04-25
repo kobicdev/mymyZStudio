@@ -55,14 +55,19 @@ export default function GeneratePage() {
   const [width, setWidth] = useState(savedParams?.width ?? DEFAULT_PARAMS.width)
   const [height, setHeight] = useState(savedParams?.height ?? DEFAULT_PARAMS.height)
   const [vramMode, setVramMode] = useState<GenerationParams['vramMode']>(savedParams?.vramMode || 'auto')
+
+  // img2img / inpaint 전용
+  const [sourceImage, setSourceImage] = useState<string | null>(savedParams?.sourceImage || null)
+  const [denoise, setDenoise] = useState(savedParams?.denoise ?? 0.6)
   
   // 파라미터 변경 시 로컬 스토리지에 저장
   useEffect(() => {
     const paramsToSave = {
-      mode, prompt, negativePrompt, steps, cfgScale, seed, sampler, width, height, vramMode
+      mode, prompt, negativePrompt, steps, cfgScale, seed, sampler, width, height, vramMode,
+      sourceImage, denoise
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(paramsToSave))
-  }, [mode, prompt, negativePrompt, steps, cfgScale, seed, sampler, width, height, vramMode])
+  }, [mode, prompt, negativePrompt, steps, cfgScale, seed, sampler, width, height, vramMode, sourceImage, denoise])
   
   // LoRA 관련
   const [availableLoras, setAvailableLoras] = useState<string[]>([])
@@ -73,6 +78,13 @@ export default function GeneratePage() {
   const [resultImage, setResultImage] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isSimMode, setIsSimMode] = useState(false)
+  const [logLines, setLogLines] = useState<string[]>([])
+  const logEndRef = useRef<HTMLDivElement>(null)
+
+  // 로그 추가 시 자동 스크롤
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'instant' })
+  }, [logLines])
   
   // 도움말 토글 상태
   const [showHelp, setShowHelp] = useState<Record<string, boolean>>({})
@@ -108,7 +120,14 @@ export default function GeneratePage() {
       }
     })
 
-    cleanupRef.current = [unsubProgress, unsubComplete, unsubError]
+    const unsubLog = api.onLog?.((data) => {
+      setLogLines((prev) => {
+        const next = [...prev, data.line]
+        return next.length > 500 ? next.slice(-500) : next
+      })
+    })
+
+    cleanupRef.current = [unsubProgress, unsubComplete, unsubError, ...(unsubLog ? [unsubLog] : [])]
 
     return () => {
       cleanupRef.current.forEach((fn) => fn())
@@ -146,6 +165,7 @@ export default function GeneratePage() {
     setErrorMsg(null)
     setProgress(null)
     setIsSimMode(false)
+    setLogLines([])
 
     const params: GenerationParams = {
       prompt: prompt.trim() || 'a beautiful landscape',
@@ -160,6 +180,8 @@ export default function GeneratePage() {
       mode,
       vramMode,
       loras: selectedLoras.length > 0 ? selectedLoras : undefined,
+      sourceImage: (mode === 'img2img' || mode === 'inpaint') ? sourceImage || undefined : undefined,
+      denoise: (mode === 'img2img' || mode === 'inpaint') ? denoise : undefined,
     }
 
     try {
@@ -256,6 +278,45 @@ export default function GeneratePage() {
           />
         </div>
 
+        {/* img2img / inpaint 소스 이미지 */}
+        {(mode === 'img2img' || mode === 'inpaint') && (
+          <div className="space-y-2">
+            <label className="text-xs text-zinc-400 font-medium">Source Image</label>
+            <div 
+              className="relative group aspect-video bg-zinc-800 border-2 border-dashed border-zinc-700 rounded-xl overflow-hidden flex flex-col items-center justify-center cursor-pointer hover:border-brand-500 transition-colors"
+              onClick={async () => {
+                const api = (window as any).electronAPI
+                if (api?.chooseImage) {
+                  const path = await api.chooseImage()
+                  if (path) setSourceImage(path)
+                }
+              }}
+            >
+              {sourceImage ? (
+                <>
+                  <img src={`zimg://${sourceImage.replace(/\\/g, '/')}`} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <span className="text-xs text-white">이미지 변경</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span className="text-2xl mb-1">🖼️</span>
+                  <span className="text-[10px] text-zinc-500">이미지를 선택하세요</span>
+                </>
+              )}
+            </div>
+            {sourceImage && (
+              <button 
+                onClick={() => setSourceImage(null)}
+                className="text-[10px] text-zinc-500 hover:text-red-400 transition-colors w-full text-right"
+              >
+                삭제
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="h-px bg-zinc-800" />
 
         {/* Generation Controls */}
@@ -322,6 +383,40 @@ export default function GeneratePage() {
               </p>
             )}
           </div>
+
+          {/* Denoise Strength (img2img/inpaint 전용) */}
+          {(mode === 'img2img' || mode === 'inpaint') && (
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-1">
+                  <label className="text-xs text-zinc-400 font-medium">Denoise Strength</label>
+                  <button
+                    onClick={() => toggleHelp('denoise')}
+                    className="text-[10px] text-zinc-500 hover:text-brand-400 transition-colors"
+                    title="도움말"
+                  >
+                    ❔
+                  </button>
+                </div>
+                <span className="text-xs text-zinc-300 font-mono">{denoise.toFixed(2)}</span>
+              </div>
+              <input
+                id="denoise-slider"
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={denoise}
+                onChange={(e) => setDenoise(Number(e.target.value))}
+                className="w-full accent-brand-500 cursor-pointer"
+              />
+              {showHelp.denoise && (
+                <p className="text-[10px] text-zinc-400 bg-zinc-800/50 p-2 rounded border border-zinc-700/50">
+                  값이 클수록 원본에서 더 많이 변합니다. (0.4~0.7 권장)
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Seed */}
           <div className="space-y-1.5">
@@ -521,12 +616,48 @@ export default function GeneratePage() {
             </div>
           )}
 
-          {/* 생성 중 오버레이 */}
+          {/* 생성 중 콘솔 패널 */}
           {isGenerating && (
-            <div className="absolute inset-0 bg-zinc-950/60 flex items-center justify-center">
-              <div className="text-center space-y-3">
-                <div className="w-16 h-16 rounded-full border-4 border-brand-500 border-t-transparent animate-spin mx-auto" />
-                <p className="text-zinc-300 text-sm">{progressLabel || 'Generating…'}</p>
+            <div className="absolute inset-0 flex flex-col bg-zinc-950/95">
+              {/* 콘솔 헤더 */}
+              <div className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border-b border-zinc-800 flex-shrink-0">
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-[11px] font-mono font-semibold text-zinc-400 uppercase tracking-widest">sd.cpp console</span>
+                <span className="ml-auto text-[10px] font-mono text-zinc-600">
+                  {progress?.mode === 'determinate' && progress.step && progress.total
+                    ? `${progress.step} / ${progress.total} steps`
+                    : 'Processing...'}
+                </span>
+              </div>
+              {/* 로그 스크롤 영역 */}
+              <div className="flex-1 overflow-y-auto p-3 font-mono text-[11px] space-y-0.5 custom-scrollbar">
+                {logLines.length === 0 ? (
+                  <p className="text-zinc-600 italic">Waiting for output...</p>
+                ) : (
+                  logLines.map((line, i) => {
+                    const isProgress = /\|[=>\s]+\|/.test(line)
+                    const isInfo = line.includes('[INFO]')
+                    const isWarn = line.includes('[WARN]') || line.includes('[WARN')
+                    const isError = line.includes('[ERROR]') || line.includes('error')
+                    const isSave = line.includes('saved') || line.includes('success')
+                    return (
+                      <div
+                        key={i}
+                        className={`leading-relaxed whitespace-pre-wrap break-all ${
+                          isProgress ? 'text-brand-400' :
+                          isSave     ? 'text-green-400' :
+                          isError    ? 'text-red-400' :
+                          isWarn     ? 'text-yellow-400' :
+                          isInfo     ? 'text-zinc-400' :
+                                       'text-zinc-300'
+                        }`}
+                      >
+                        {line}
+                      </div>
+                    )
+                  })
+                )}
+                <div ref={logEndRef} />
               </div>
             </div>
           )}
