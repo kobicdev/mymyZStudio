@@ -450,6 +450,11 @@ v0.1 PoC: ⏳ 대기 중
 | 2026-04-24 | BACKEND | Ollama 서비스를 범용 LLM 서비스(LM Studio 호환)로 전환 | BE-09 |
 | 2026-04-24 | FRONTEND | 설정 UI에서 LM Studio 연동 기능 및 토글 구현 | FE-11 |
 | 2026-04-24 | FRONTEND | 프롬프트 입력창 리셋 버튼 추가 및 파라미터 요약 가이드 추가 | FE-01 |
+| 2026-04-25 | FRONTEND | BrowserRouter → MemoryRouter 교체 (file:// 환경에서 라우팅 불가 문제 수정) | FE-01 |
+| 2026-04-25 | BACKEND | CSP connect-src를 localhost:* 로 변경 (LM Studio 등 로컬 서비스 차단 문제 수정) | — |
+| 2026-04-25 | FRONTEND | Generate 페이지: 생성 중 spinner 오버레이 → sd.cpp 실시간 콘솔 로그 패널로 교체 | FE-02 |
+| 2026-04-25 | BACKEND | inference:log IPC 채널 추가 및 sd.cpp stdout/stderr 라인 렌더러 스트리밍 | BE-04 |
+| 2026-04-25 | BACKEND | start.bat 재작성 — better-sqlite3 빌드 체크, NODE_ENV=production 명시, dev.bat과 동기화 | — |
 | 2026-04-24 | ORCHESTRATOR | GitHub 저장소 연동 및 히스토리 기록 규칙 명시 | — |
 
 ---
