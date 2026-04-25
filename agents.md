@@ -405,8 +405,9 @@ fix/          — 버그 수정
 ```
 
 ### 히스토리 관리
-- 모든 에이전트는 주요 기능 변경, 버그 수정, 아키텍처 결정을 수행한 후 이 파일의 **변경 이력 (Change History)** 섹션에 기록해야 함.
-- 기록 형식: `[날짜] [에이전트] [태스크ID] 내용 요약`
+- 모든 에이전트는 주요 기능 변경, 버그 수정, 아키텍처 결정을 수행한 후 **[`jobHistory.md`](./jobHistory.md)** 에 기록해야 함.
+- 기록 형식: `| 날짜 | 에이전트 | 태스크ID | 내용 요약 |`
+- 최신 항목이 테이블 **상단**에 오도록 역순 삽입
 
 ### 커밋 컨벤션
 ```
@@ -437,25 +438,10 @@ v0.1 PoC: ⏳ 대기 중
 
 ---
 
----
-
 ## 변경 이력 (Change History)
 
-| 날짜 | 에이전트 | 내용 | 태스크 |
-|------|----------|------|--------|
-| 2026-04-25 | BACKEND | Windows 드라이브 문자(D:)가 포함된 zimg 프로토콜 경로 파싱 오류 수정 | — |
-| 2026-04-25 | BACKEND | start.bat 실행 시 production 모드에서 index.html 경로 오류 수정 (../dist -> ../../dist) | — |
-| 2026-04-24 | FRONTEND | img2img 기능 구현 (소스 이미지 선택 UI + Denoise 슬라이더) | FE-07 |
-| 2026-04-24 | BACKEND | img2img IPC 핸들러 및 CLI 인자 구성 (--strength 지원) | BE-01 |
-| 2026-04-24 | BACKEND | Ollama 서비스를 범용 LLM 서비스(LM Studio 호환)로 전환 | BE-09 |
-| 2026-04-24 | FRONTEND | 설정 UI에서 LM Studio 연동 기능 및 토글 구현 | FE-11 |
-| 2026-04-24 | FRONTEND | 프롬프트 입력창 리셋 버튼 추가 및 파라미터 요약 가이드 추가 | FE-01 |
-| 2026-04-25 | FRONTEND | BrowserRouter → MemoryRouter 교체 (file:// 환경에서 라우팅 불가 문제 수정) | FE-01 |
-| 2026-04-25 | BACKEND | CSP connect-src를 localhost:* 로 변경 (LM Studio 등 로컬 서비스 차단 문제 수정) | — |
-| 2026-04-25 | FRONTEND | Generate 페이지: 생성 중 spinner 오버레이 → sd.cpp 실시간 콘솔 로그 패널로 교체 | FE-02 |
-| 2026-04-25 | BACKEND | inference:log IPC 채널 추가 및 sd.cpp stdout/stderr 라인 렌더러 스트리밍 | BE-04 |
-| 2026-04-25 | BACKEND | start.bat 재작성 — better-sqlite3 빌드 체크, NODE_ENV=production 명시, dev.bat과 동기화 | — |
-| 2026-04-24 | ORCHESTRATOR | GitHub 저장소 연동 및 히스토리 기록 규칙 명시 | — |
+> 변경 이력은 별도 파일로 분리 관리됩니다.  
+> 👉 **[`jobHistory.md`](./jobHistory.md)** 를 참조하세요.
 
 ---
 
