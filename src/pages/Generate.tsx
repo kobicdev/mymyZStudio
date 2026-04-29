@@ -10,6 +10,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { GenerationParams, GenerationProgress, GenerationMode } from '../shared/types'
+import MaskCanvas from '../components/MaskCanvas'
+import type { MaskCanvasHandle } from '../components/MaskCanvas'
 
 const DEFAULT_PARAMS: Omit<GenerationParams, 'prompt' | 'mode'> = {
   negativePrompt: 'blurry, low quality, deformed, ugly, bad anatomy',
@@ -59,6 +61,7 @@ export default function GeneratePage() {
   // img2img / inpaint 전용
   const [sourceImage, setSourceImage] = useState<string | null>(savedParams?.sourceImage || null)
   const [denoise, setDenoise] = useState(savedParams?.denoise ?? 0.6)
+  const maskCanvasRef = useRef<MaskCanvasHandle>(null)
   
   // 파라미터 변경 시 로컬 스토리지에 저장
   useEffect(() => {
@@ -167,6 +170,18 @@ export default function GeneratePage() {
     setIsSimMode(false)
     setLogLines([])
 
+    // inpaint 모드: 마스크 먼저 저장
+    let savedMaskPath: string | undefined
+    if (mode === 'inpaint' && maskCanvasRef.current) {
+      try {
+        const dataUrl = maskCanvasRef.current.getMaskDataUrl()
+        const result = await (api as any).saveMask(dataUrl)
+        if (result?.maskPath) savedMaskPath = result.maskPath
+      } catch (err) {
+        console.warn('[Inpaint] mask save failed:', err)
+      }
+    }
+
     const params: GenerationParams = {
       prompt: prompt.trim() || 'a beautiful landscape',
       negativePrompt: negativePrompt.trim() || undefined,
@@ -181,6 +196,7 @@ export default function GeneratePage() {
       vramMode,
       loras: selectedLoras.length > 0 ? selectedLoras : undefined,
       sourceImage: (mode === 'img2img' || mode === 'inpaint') ? sourceImage || undefined : undefined,
+      maskImage: mode === 'inpaint' ? savedMaskPath : undefined,
       denoise: (mode === 'img2img' || mode === 'inpaint') ? denoise : undefined,
     }
 
@@ -190,7 +206,7 @@ export default function GeneratePage() {
       setIsGenerating(false)
       setErrorMsg(err instanceof Error ? err.message : 'Unknown error')
     }
-  }, [isGenerating, prompt, negativePrompt, seed, steps, cfgScale, width, height, sampler, mode, vramMode, selectedLoras])
+  }, [isGenerating, prompt, negativePrompt, seed, steps, cfgScale, width, height, sampler, mode, vramMode, selectedLoras, sourceImage, denoise])
 
   const handleCancel = useCallback(async () => {
     const api = (window as unknown as { electronAPI?: typeof window.electronAPI }).electronAPI
@@ -314,6 +330,26 @@ export default function GeneratePage() {
                 삭제
               </button>
             )}
+          </div>
+        )}
+
+        {/* inpaint 마스크 캔버스 에디터 */}
+        {mode === 'inpaint' && sourceImage && (
+          <div className="space-y-1">
+            <label className="text-xs text-zinc-400 font-medium">마스크 에디터</label>
+            <MaskCanvas
+              ref={maskCanvasRef}
+              sourceImagePath={`zimg://${sourceImage.replace(/\\/g, '/')}`}
+              width={width}
+              height={height}
+            />
+          </div>
+        )}
+
+        {/* inpaint 모드에서 소스 이미지 없으면 안내 */}
+        {mode === 'inpaint' && !sourceImage && (
+          <div className="p-3 rounded-xl bg-zinc-800/50 border border-dashed border-zinc-700 text-center">
+            <p className="text-[10px] text-zinc-500">↑ 소스 이미지를 먼저 선택하면<br/>마스크 에디터가 표시됩니다</p>
           </div>
         )}
 

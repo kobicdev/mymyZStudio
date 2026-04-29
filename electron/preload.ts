@@ -44,6 +44,7 @@ const CHANNELS = {
   SETTINGS_CHOOSE_OUTPUT_DIR: 'settings:choose-output-dir',
 
   APP_BUG_REPORT: 'app:bug-report',
+  INPAINT_SAVE_MASK: 'inpaint:save-mask',
 } as const
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -163,4 +164,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   copyBugReport: () =>
     ipcRenderer.invoke(CHANNELS.APP_BUG_REPORT),
+
+  // ─── Inpaint ──────────────────────────────
+  saveMask: (dataUrl: string) =>
+    ipcRenderer.invoke(CHANNELS.INPAINT_SAVE_MASK, dataUrl),
 })

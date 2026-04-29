@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { GenerationRecord } from '../shared/types'
 
 /**
@@ -92,6 +92,19 @@ export default function GalleryPage() {
     if (next.has(id)) next.delete(id)
     else next.add(id)
     setSelectedIds(next)
+  }
+
+  // 클립보드 복사 (토스트 피드백)
+  const [copiedId, setCopiedId] = useState<number | string | null>(null)
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleCopyPrompt = (e: React.MouseEvent, prompt: string, id: number | string) => {
+    e.stopPropagation()
+    navigator.clipboard.writeText(prompt).then(() => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+      setCopiedId(id)
+      copyTimerRef.current = setTimeout(() => setCopiedId(null), 2000)
+    })
   }
 
   // 즐겨찾기 토글
@@ -248,18 +261,37 @@ export default function GalleryPage() {
                         <p className="text-white text-[10px] font-mono mb-1 text-brand-400">ID: {gen.id}</p>
                         <p className="text-white text-xs font-medium line-clamp-2 leading-tight">{gen.prompt}</p>
                       </div>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(gen.id);
-                        }}
-                        className="ml-2 w-8 h-8 rounded-lg bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-all duration-200 border border-red-500/30"
-                        title="삭제"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                      <div className="ml-2 flex flex-col gap-1.5">
+                        {/* 복사 버튼 */}
+                        <button
+                          onClick={(e) => handleCopyPrompt(e, gen.prompt, gen.id)}
+                          className="w-8 h-8 rounded-lg bg-white/10 hover:bg-brand-500 text-white flex items-center justify-center transition-all duration-200 border border-white/20 hover:border-brand-500"
+                          title="프롬프트 복사"
+                        >
+                          {copiedId === gen.id ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          )}
+                        </button>
+                        {/* 삭제 버튼 */}
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(gen.id);
+                          }}
+                          className="w-8 h-8 rounded-lg bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-all duration-200 border border-red-500/30"
+                          title="삭제"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -293,7 +325,34 @@ export default function GalleryPage() {
             {/* 정보 영역 */}
             <div className="w-full md:w-80 lg:w-96 p-6 border-l border-zinc-800 flex flex-col overflow-y-auto custom-scrollbar">
               <div className="mb-6">
-                <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2">Prompt</h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Prompt</h3>
+                  <button
+                    onClick={(e) => handleCopyPrompt(e, selectedImage.prompt, 'modal')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all duration-200 ${
+                      copiedId === 'modal'
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : 'bg-zinc-800 text-zinc-400 hover:bg-brand-500/20 hover:text-brand-400 border border-zinc-700 hover:border-brand-500/40'
+                    }`}
+                    title="프롬프트를 클립보드에 복사"
+                  >
+                    {copiedId === 'modal' ? (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copy
+                      </>
+                    )}
+                  </button>
+                </div>
                 <p className="text-zinc-100 text-sm leading-relaxed bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">{selectedImage.prompt}</p>
               </div>
 

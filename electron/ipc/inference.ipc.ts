@@ -1,4 +1,7 @@
 import { ipcMain, BrowserWindow } from 'electron'
+import path from 'path'
+import fs from 'fs'
+import os from 'os'
 import log from 'electron-log'
 import { IPC_CHANNELS, type GenerationParams } from '../../src/shared/types'
 import { InferenceService } from '../services/inference'
@@ -108,6 +111,23 @@ export function registerInferenceHandlers(): void {
       log.warn(`[IPC] cancel error: ${err}`)
     }
     return { success: true }
+  })
+
+  // ── inpaint:save-mask ──────────────────────────────
+  // Canvas 마스크(dataURL) → 임시 PNG 파일 저장 → 경로 반환
+  ipcMain.handle('inpaint:save-mask', async (_event, dataUrl: string) => {
+    try {
+      // data:image/png;base64,<data> 형식에서 base64 추출
+      const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '')
+      const buffer = Buffer.from(base64, 'base64')
+      const maskPath = path.join(os.tmpdir(), `zstudio_mask_${Date.now()}.png`)
+      fs.writeFileSync(maskPath, buffer)
+      log.info(`[IPC] inpaint:save-mask → ${maskPath}`)
+      return { maskPath }
+    } catch (err) {
+      log.error(`[IPC] inpaint:save-mask error: ${err}`)
+      return { error: String(err) }
+    }
   })
 
   log.info('[IPC] Inference handlers registered')

@@ -406,6 +406,7 @@ export class InferenceService {
     }
 
     // 2. 모드별 특화 인수 (img2img / inpaint)
+    // sd.cpp CLI는 --mode를 명시해야 소스 이미지와 마스크를 올바르게 처리함
     if (params.mode === 'img2img' || params.mode === 'inpaint') {
       if (params.sourceImage) {
         args.push('-i', path.resolve(params.sourceImage))
@@ -414,9 +415,17 @@ export class InferenceService {
         args.push('--strength', String(params.denoise))
       }
       if (params.mode === 'inpaint' && params.maskImage) {
+        // 마스크가 있을 때만 inpaint 모드 (마스크 없으면 img2img로 폴백)
+        args.push('--mode', 'inpaint')
         args.push('--mask', path.resolve(params.maskImage))
+        log.info(`[Inference] Inpaint mode: mask=${params.maskImage}`)
+      } else {
+        // img2img 또는 마스크 없는 inpaint
+        args.push('--mode', 'img2img')
+        log.info(`[Inference] img2img mode: source=${params.sourceImage}`)
       }
     }
+
 
     // 3. 공통 인수
     args.push('-p', params.prompt)

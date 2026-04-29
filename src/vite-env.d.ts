@@ -12,6 +12,7 @@ declare global {
       onProgress: (cb: (progress: import('./shared/types').GenerationProgress) => void) => () => void
       onComplete: (cb: (result: { imagePath: string; generationId?: number; simulated?: boolean; imageData?: string }) => void) => () => void
       onError: (cb: (err: { message: string; code: string }) => void) => () => void
+      onLog?: (cb: (data: { line: string }) => void) => () => void
 
       // GPU
       probeGpu: () => Promise<import('./shared/types').GpuProbeResult | null>
@@ -47,6 +48,9 @@ declare global {
       // App
       chooseImage: () => Promise<string | null>
       copyBugReport: () => Promise<string>
+
+      // Inpaint
+      saveMask: (dataUrl: string) => Promise<{ maskPath: string } | { error: string }>
     }
   }
 }

@@ -23,6 +23,10 @@
 
 | 날짜 | 에이전트 | 태스크 | 내용 |
 |------|----------|--------|------|
+| 2026-04-27 | ORCHESTRATOR | — | 빌드 설정 개선: win.target에 zip 추가 (무설치 실행용 압축 폴더 생성) |
+| 2026-04-25 | FRONTEND | FE-07 | Inpaint 구현: MaskCanvas 컴포넌트 (브러시/지우개/반전/초기화), Generate 페이지 통합, maskImage → params 전달 |
+| 2026-04-25 | BACKEND | FE-07 | Inpaint 구현: inpaint:save-mask IPC 핸들러 (base64→PNG 임시저장), preload saveMask API 노출 |
+| 2026-04-25 | FRONTEND | FE-04 | Gallery 페이지: 프롬프트 클립보드 복사 기능 추가 (카드 호버 오버레이 + 상세 모달 Prompt 섹션, 2초 Copied! 피드백) |
 | 2026-04-25 | FRONTEND | FE-02 | Generate 페이지: 생성 중 spinner 오버레이 → sd.cpp 실시간 콘솔 로그 패널로 교체 |
 | 2026-04-25 | BACKEND | BE-04 | inference:log IPC 채널 추가 및 sd.cpp stdout/stderr 라인 렌더러 스트리밍 |
 | 2026-04-25 | FRONTEND | FE-01 | BrowserRouter → MemoryRouter 교체 (file:// 환경에서 라우팅 불가 문제 수정) |
